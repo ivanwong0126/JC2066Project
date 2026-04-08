@@ -14,6 +14,9 @@
     .chart { height: 20px; background: #ddd; border-radius: 10px; overflow: hidden; margin-top: 10px; }
     .bar { height: 100%; background: #e74c3c; text-align: center; color: white; line-height: 20px; }
     #preview { margin-top: 20px; }
+    #embedStatus { margin-top: 12px; font-size: 14px; }
+    #embedStatus a { color: #3498db; font-weight: bold; text-decoration: none; }
+    #embedStatus a:hover { text-decoration: underline; }
     blockquote.instagram-media { margin: auto; }
   </style>
 </head>
@@ -63,6 +66,17 @@
       }
     }
 
+    function processInstagramEmbedWithRetry(retries = 12, delayMs = 250) {
+      if (window.instgrm?.Embeds?.process) {
+        window.instgrm.Embeds.process();
+        return;
+      }
+
+      if (retries > 0) {
+        setTimeout(() => processInstagramEmbedWithRetry(retries - 1, delayMs), delayMs);
+      }
+    }
+
     function detectAI() {
       const url = document.getElementById('videoInput').value;
       const permalink = getEmbedPermalink(url);
@@ -76,11 +90,24 @@
       document.getElementById('preview').innerHTML =
         `<blockquote class="instagram-media" 
             data-instgrm-permalink="${permalink}" 
-            data-instgrm-version="14"></blockquote>`;
-      // Re-run Instagram embed script to render
-      if (window.instgrm) {
-        window.instgrm.Embeds.process();
-      }
+            data-instgrm-version="14"></blockquote>
+         <div id="embedStatus">Loading Instagram preview...<br><a href="${permalink}" target="_blank" rel="noopener noreferrer">Open this post on Instagram</a></div>`;
+
+      processInstagramEmbedWithRetry();
+
+      setTimeout(() => {
+        const preview = document.getElementById('preview');
+        const hasIframe = !!preview.querySelector('iframe');
+        const status = document.getElementById('embedStatus');
+
+        if (!status) return;
+
+        if (hasIframe) {
+          status.style.display = 'none';
+        } else {
+          status.innerHTML = `Instagram preview may be blocked on this host/browser.<br><a href="${permalink}" target="_blank" rel="noopener noreferrer">Open this post on Instagram</a>`;
+        }
+      }, 3000);
 
       // Dummy detection logic: random percentage
       const aiPercent = Math.floor(Math.random() * 100);
