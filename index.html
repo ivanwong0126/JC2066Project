@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AI Content Detector</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; background: #f9f9f9; color: #333; }
+    h1 { color: #2c3e50; }
+    .container { max-width: 600px; margin: auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    input[type="text"] { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px; }
+    button { background: #3498db; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; }
+    button:hover { background: #2980b9; }
+    .result { margin-top: 20px; padding: 15px; background: #ecf0f1; border-radius: 6px; }
+    .chart { height: 20px; background: #ddd; border-radius: 10px; overflow: hidden; margin-top: 10px; }
+    .bar { height: 100%; background: #e74c3c; text-align: center; color: white; line-height: 20px; }
+    #preview { margin-top: 20px; }
+    blockquote.instagram-media { margin: auto; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>AI Content Detector</h1>
+    <p>This website helps users detect whether Instagram Reels content is AI-generated or authentic. Paste the link to a Reel below and get an instant analysis.</p>
+    
+    <input type="text" id="videoInput" placeholder="Paste Instagram Reels URL here">
+    <button onclick="detectAI()">Detect AI Content</button>
+    
+    <div id="preview"></div>
+    
+    <div id="output" class="result" style="display:none;">
+      <h3>Detection Result</h3>
+      <div class="chart">
+        <div id="bar" class="bar" style="width:0%">0%</div>
+      </div>
+      <button onclick="downloadReport()">Download Report</button>
+    </div>
+  </div>
+
+  <!-- Instagram embed script -->
+  <script async src="//www.instagram.com/embed.js"></script>
+
+  <script>
+    function detectAI() {
+      const url = document.getElementById('videoInput').value;
+      if (!url || !url.includes("instagram.com")) {
+        alert("Please paste a valid Instagram Reels URL.");
+        return;
+      }
+
+      // Show Instagram Reel preview using official embed
+      document.getElementById('preview').innerHTML =
+        `<blockquote class="instagram-media" 
+            data-instgrm-permalink="${url}" 
+            data-instgrm-version="14"></blockquote>`;
+      // Re-run Instagram embed script to render
+      if (window.instgrm) {
+        window.instgrm.Embeds.process();
+      }
+
+      // Dummy detection logic: random percentage
+      const aiPercent = Math.floor(Math.random() * 100);
+      const bar = document.getElementById('bar');
+      bar.style.width = aiPercent + "%";
+      bar.textContent = aiPercent + "% AI Content";
+
+      document.getElementById('output').style.display = "block";
+    }
+
+    function downloadReport() {
+      const barText = document.getElementById('bar').textContent;
+      const report = "AI Content Detection Report\n\nResult: " + barText;
+      
+      const blob = new Blob([report], { type: "text/plain" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "AI_Detection_Report.txt";
+      link.click();
+    }
+  </script>
+</body>
+</html>
