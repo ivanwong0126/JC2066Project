@@ -11,6 +11,23 @@
       var path = window.location.pathname || "";
       var segments = path.split('/').filter(Boolean);
 
+      function normalizeInstagramCandidate(text) {
+        if (!text) return null;
+
+        var candidate = decodeURIComponent(text).trim();
+        if (!candidate) return null;
+
+        candidate = candidate.replace(/^https:\/(?!\/)/i, 'https://');
+        candidate = candidate.replace(/^http:\/(?!\/)/i, 'http://');
+
+        if (/^(?:www\.|m\.)?instagram\.com\//i.test(candidate)) {
+          candidate = 'https://' + candidate.replace(/^\/+/, '');
+        }
+
+        var match = candidate.match(/https?:\/\/(?:www\.|m\.)?instagram\.com\/[\S]*/i);
+        return match ? match[0] : null;
+      }
+
       if (segments.length === 0) {
         window.location.replace('/');
         return;
@@ -18,12 +35,14 @@
 
       var project = segments[0];
       var remainder = segments.slice(1).join('/');
-      var decoded = decodeURIComponent(remainder);
+      var igUrl = normalizeInstagramCandidate(remainder);
 
-      var igMatch = decoded.match(/https?:\/\/(?:www\.|m\.)?instagram\.com\/[\S]*/i);
+      if (!igUrl && segments.length > 2 && /^(https?:)$/i.test(segments[1])) {
+        var rebuilt = segments[1] + '//' + segments.slice(2).join('/');
+        igUrl = normalizeInstagramCandidate(rebuilt);
+      }
 
-      if (igMatch) {
-        var igUrl = igMatch[0];
+      if (igUrl) {
         var target = '/' + project + '/?ig=' + encodeURIComponent(igUrl);
         window.location.replace(target);
         return;
