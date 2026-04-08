@@ -2,40 +2,176 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>AI Content Detector</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
-    body { font-family: Arial, sans-serif; margin: 40px; background: #f9f9f9; color: #333; }
-    h1 { color: #2c3e50; }
-    .container { max-width: 600px; margin: auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-    input[type="text"] { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px; }
-    button { background: #3498db; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; }
-    button:hover { background: #2980b9; }
-    .result { margin-top: 20px; padding: 15px; background: #ecf0f1; border-radius: 6px; }
-    .chart { height: 20px; background: #ddd; border-radius: 10px; overflow: hidden; margin-top: 10px; }
-    .bar { height: 100%; background: #e74c3c; text-align: center; color: white; line-height: 20px; }
-    #preview { margin-top: 20px; }
-    #embedStatus { margin-top: 12px; font-size: 14px; }
-    #embedStatus a { color: #3498db; font-weight: bold; text-decoration: none; }
-    #embedStatus a:hover { text-decoration: underline; }
+    body {
+      background: linear-gradient(180deg, #f2f4f8 0%, #e9edf4 100%);
+      color: #1f2937;
+      min-height: 100vh;
+    }
+
+    .app-shell {
+      max-width: 1180px;
+    }
+
+    .main-card {
+      border: 0;
+      border-radius: 1rem;
+      box-shadow: 0 10px 30px rgba(12, 27, 58, 0.1);
+    }
+
+    #preview {
+      margin-top: 1rem;
+      min-height: 80px;
+      width: 100%;
+    }
+
+    .preview-shell {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    .preview-shell.is-ready {
+      padding: 0.5rem;
+      background: #f8fafc;
+      border: 1px solid #dbe5f3;
+      border-radius: 0.75rem;
+    }
+
+    .preview-shell blockquote.instagram-media {
+      margin: 0 auto !important;
+      width: min(100%, 360px) !important;
+      min-width: 240px !important;
+      max-width: 360px !important;
+    }
+
+    .preview-shell iframe {
+      width: 100% !important;
+    }
+
+    .preview-loading {
+      min-height: 96px;
+    }
+
+    .analysis-panel {
+      background: #f8fafc;
+      border: 1px solid #dbe5f3;
+      border-radius: 0.75rem;
+    }
+
+    .result-box {
+      width: 100%;
+      border-radius: 0.9rem;
+      border: 1px solid #dbe2ee;
+      background: #f7f9fc;
+    }
+
+    .result-badge {
+      font-size: 0.9rem;
+      letter-spacing: 0.2px;
+    }
+
+    .pie-wrap {
+      width: 170px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .pie-circle {
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      margin: 0 auto 0.65rem auto;
+      display: grid;
+      place-items: center;
+      background: conic-gradient(#dc3545 0deg, #dc3545 0deg, #dce3ed 0deg);
+      position: relative;
+    }
+
+    .pie-circle::after {
+      content: "";
+      width: 96px;
+      height: 96px;
+      border-radius: 50%;
+      background: #ffffff;
+      position: absolute;
+    }
+
+    .pie-value {
+      position: relative;
+      z-index: 1;
+      font-weight: 700;
+      color: #1f2937;
+      font-size: 1.15rem;
+    }
+
     blockquote.instagram-media { margin: auto; }
+
+    @media (min-width: 1200px) {
+      .result-box {
+        width: 100%;
+      }
+    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>AI Content Detector</h1>
-    <p>This website helps users detect whether Instagram Reels content is AI-generated or authentic. Paste the link to a Reel below and get an instant analysis.</p>
-    
-    <input type="text" id="videoInput" placeholder="Paste Instagram Reels URL here">
-    <button onclick="detectAI()">Detect AI Content</button>
-    
-    <div id="preview"></div>
-    
-    <div id="output" class="result" style="display:none;">
-      <h3>Detection Result</h3>
-      <div class="chart">
-        <div id="bar" class="bar" style="width:0%">0%</div>
+  <div class="container py-4 py-md-5 app-shell">
+    <div class="card main-card">
+      <div class="card-body p-4 p-md-5">
+        <h1 class="display-6 fw-bold text-primary mb-3">AI Content Detector</h1>
+        <p class="text-secondary mb-4">Paste an Instagram Reel URL and run a simulated AI authenticity analysis. The detector will estimate processing time, animate scan progress, and then return a True/False result with explanation.</p>
+
+        <div class="row g-2 align-items-end">
+          <div class="col-12 col-md-9">
+            <label for="videoInput" class="form-label fw-semibold">Instagram Reel URL</label>
+            <input type="text" id="videoInput" class="form-control form-control-lg" placeholder="https://www.instagram.com/reel/.../">
+          </div>
+          <div class="col-12 col-md-3 d-grid">
+            <button id="detectBtn" class="btn btn-primary btn-lg" onclick="detectAI()">Detect AI Content</button>
+          </div>
+        </div>
+
+        <div id="preview"></div>
+
+        <div id="analysisPanel" class="analysis-panel p-3 mt-4 d-none">
+          <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
+            <h2 class="h5 mb-0">Detection Progress</h2>
+            <div class="small text-secondary">Processing time: <span id="estimatedTime">0.0</span>s / 5.0s</div>
+          </div>
+          <div class="progress mt-3" role="progressbar" aria-label="Analysis progress" aria-valuemin="0" aria-valuemax="100">
+            <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated" style="width: 0%">0%</div>
+          </div>
+          <div id="scanStatus" class="small text-secondary mt-2">Preparing analysis...</div>
+        </div>
+
+        <div id="output" class="result-box p-3 p-md-4 mt-4 d-none">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="h4 mb-0">Detection Output</h2>
+            <span id="tfResult" class="badge text-bg-secondary result-badge">Pending</span>
+          </div>
+
+          <div class="row g-4 align-items-center">
+            <div class="col-12 col-md-5">
+              <div class="pie-wrap">
+                <div id="pieChart" class="pie-circle">
+                  <div id="pieValue" class="pie-value">0%</div>
+                </div>
+                <div class="small text-secondary">Estimated AI-generated content</div>
+              </div>
+            </div>
+            <div class="col-12 col-md-7">
+              <h3 class="h6 text-uppercase text-secondary">Model Comment</h3>
+              <p id="aiComment" class="mb-2">Run analysis to view reasoning.</p>
+              <p id="confidenceText" class="mb-3 fw-semibold">Confidence: -</p>
+              <button class="btn btn-outline-primary btn-sm" onclick="downloadReport()">Download Report</button>
+            </div>
+          </div>
+        </div>
       </div>
-      <button onclick="downloadReport()">Download Report</button>
     </div>
   </div>
 
@@ -109,50 +245,203 @@
       return null;
     }
 
-    function detectAI() {
+    function sleep(ms) {
+      return new Promise((resolve) => setTimeout(resolve, ms));
+    }
+
+    function waitForEmbedIframe(previewRoot, timeoutMs = 6000, pollMs = 120) {
+      return new Promise((resolve) => {
+        const startedAt = Date.now();
+        let settled = false;
+
+        const finish = (value) => {
+          if (settled) return;
+          settled = true;
+          resolve(value);
+        };
+
+        const check = () => {
+          const iframe = previewRoot.querySelector('iframe');
+          if (iframe) {
+            if (!iframe.dataset.loadHooked) {
+              iframe.dataset.loadHooked = '1';
+              iframe.addEventListener('load', () => finish(true), { once: true });
+            }
+
+            // Some browsers can render before load event callback is captured.
+            if (iframe.getBoundingClientRect().height > 120) {
+              finish(true);
+              return;
+            }
+          }
+
+          if (Date.now() - startedAt >= timeoutMs) {
+            finish(false);
+            return;
+          }
+
+          setTimeout(check, pollMs);
+        };
+
+        check();
+      });
+    }
+
+    function getDetectionComment(aiPercent) {
+      if (aiPercent >= 75) {
+        return "Strong synthetic indicators were detected, including unusually smooth skin texture transitions, highly consistent lighting across motion frames, and reduced micro-expression variation.";
+      }
+
+      if (aiPercent >= 55) {
+        return "Several AI-like artifacts were found. Temporal coherence is high, but eye highlights and fine edge transitions fluctuate in a way that often appears in generated or heavily altered clips.";
+      }
+
+      if (aiPercent >= 40) {
+        return "Mixed pattern detected. The clip shows mostly natural behavior, but a few frame-level inconsistencies suggest possible enhancement or partial synthetic processing.";
+      }
+
+      return "Low AI signal. Motion cadence, texture noise, and scene response look mostly organic, consistent with authentic camera-captured content.";
+    }
+
+    function getConfidence(aiPercent) {
+      if (aiPercent >= 80 || aiPercent <= 20) return "High";
+      if (aiPercent >= 65 || aiPercent <= 35) return "Medium";
+      return "Moderate";
+    }
+
+    function renderResult(aiPercent) {
+      const isAI = aiPercent >= 60;
+      const tfResult = document.getElementById('tfResult');
+      const pieChart = document.getElementById('pieChart');
+      const pieValue = document.getElementById('pieValue');
+      const aiComment = document.getElementById('aiComment');
+      const confidenceText = document.getElementById('confidenceText');
+      const output = document.getElementById('output');
+
+      const angle = Math.round((aiPercent / 100) * 360);
+      const pieColor = isAI ? '#dc3545' : '#198754';
+      pieChart.style.background = `conic-gradient(${pieColor} 0deg ${angle}deg, #dce3ed ${angle}deg 360deg)`;
+      pieValue.textContent = `${aiPercent}%`;
+
+      tfResult.textContent = isAI ? 'True (AI Likely)' : 'False (Likely Authentic)';
+      tfResult.className = `badge ${isAI ? 'text-bg-danger' : 'text-bg-success'} result-badge`;
+
+      aiComment.textContent = getDetectionComment(aiPercent);
+      confidenceText.textContent = `Confidence: ${getConfidence(aiPercent)}`;
+      output.classList.remove('d-none');
+      output.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function runAnalysisAnimation(aiPercent) {
+      const durationMs = 5000;
+      const tickMs = 100;
+      const startedAt = Date.now();
+      const analysisPanel = document.getElementById('analysisPanel');
+      const progressBar = document.getElementById('progressBar');
+      const estimatedTime = document.getElementById('estimatedTime');
+      const scanStatus = document.getElementById('scanStatus');
+      const detectBtn = document.getElementById('detectBtn');
+
+      analysisPanel.classList.remove('d-none');
+      progressBar.style.width = '0%';
+      progressBar.textContent = '0%';
+      estimatedTime.textContent = '0.0';
+      scanStatus.textContent = 'Preparing analysis...';
+      detectBtn.disabled = true;
+      detectBtn.textContent = 'Analyzing...';
+
+      const timer = setInterval(() => {
+        const elapsed = Date.now() - startedAt;
+        const progress = Math.min(100, Math.round((elapsed / durationMs) * 100));
+        const elapsedSec = Math.min(durationMs, elapsed) / 1000;
+
+        progressBar.style.width = `${progress}%`;
+        progressBar.textContent = `${progress}%`;
+        estimatedTime.textContent = elapsedSec.toFixed(1);
+        scanStatus.textContent = progress < 100 ? 'Running authenticity checks...' : 'Finalizing report';
+
+        if (progress >= 100) {
+          clearInterval(timer);
+          estimatedTime.textContent = (durationMs / 1000).toFixed(1);
+          detectBtn.disabled = false;
+          detectBtn.textContent = 'Detect AI Content';
+          renderResult(aiPercent);
+        }
+      }, tickMs);
+    }
+
+    async function detectAI() {
       const url = document.getElementById('videoInput').value;
       const permalink = getEmbedPermalink(url);
+      const analysisPanel = document.getElementById('analysisPanel');
+      const output = document.getElementById('output');
+      const progressBar = document.getElementById('progressBar');
+      const estimatedTime = document.getElementById('estimatedTime');
+      const scanStatus = document.getElementById('scanStatus');
+      const preview = document.getElementById('preview');
 
       if (!permalink) {
         alert("Please paste a valid Instagram post/reel URL (e.g. https://www.instagram.com/reel/.../).");
         return;
       }
 
+      // Reset previous run state immediately so old 100%/0.0 values are not shown.
+      analysisPanel.classList.add('d-none');
+      output.classList.add('d-none');
+      progressBar.style.width = '0%';
+      progressBar.textContent = '0%';
+      estimatedTime.textContent = '0.0';
+      scanStatus.textContent = 'Preparing analysis...';
+
+      // Brief pre-load delay (1-2 seconds) to simulate fetching video metadata.
+      const preLoadDelayMs = Math.floor(Math.random() * 1000) + 1000;
+      preview.innerHTML = '<div class="preview-loading d-flex justify-content-center align-items-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>';
+      await sleep(preLoadDelayMs);
+
       // Show Instagram Reel preview using official embed
-      document.getElementById('preview').innerHTML =
-        `<blockquote class="instagram-media" 
-            data-instgrm-permalink="${permalink}" 
-            data-instgrm-version="14"></blockquote>
-         <div id="embedStatus">Loading Instagram preview...<br><a href="${permalink}" target="_blank" rel="noopener noreferrer">Open this post on Instagram</a></div>`;
+      preview.innerHTML =
+        `<div id="previewLoading" class="preview-loading d-flex justify-content-center align-items-center">
+          <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>
+        </div>
+        <div id="previewShell" class="preview-shell invisible">
+          <blockquote class="instagram-media" 
+              data-instgrm-permalink="${permalink}" 
+              data-instgrm-version="14"></blockquote>
+        </div>`;
 
       processInstagramEmbedWithRetry();
 
-      setTimeout(() => {
-        const preview = document.getElementById('preview');
-        const hasIframe = !!preview.querySelector('iframe');
-        const status = document.getElementById('embedStatus');
+      const previewShell = document.getElementById('previewShell');
+      const previewLoading = document.getElementById('previewLoading');
+      await waitForEmbedIframe(previewShell);
 
-        if (!status) return;
+      previewShell.classList.remove('invisible');
+      previewShell.classList.add('is-ready');
+      if (previewLoading) {
+        previewLoading.remove();
+      }
 
-        if (hasIframe) {
-          status.style.display = 'none';
-        } else {
-          status.innerHTML = `Instagram preview may be blocked on this host/browser.<br><a href="${permalink}" target="_blank" rel="noopener noreferrer">Open this post on Instagram</a>`;
-        }
-      }, 3000);
-
-      // Dummy detection logic: random percentage
-      const aiPercent = Math.floor(Math.random() * 100);
-      const bar = document.getElementById('bar');
-      bar.style.width = aiPercent + "%";
-      bar.textContent = aiPercent + "% AI Content";
-
-      document.getElementById('output').style.display = "block";
+      // Simulated detector output after timeline animation completes.
+      const aiPercent = Math.floor(Math.random() * 81) + 10;
+      runAnalysisAnimation(aiPercent);
     }
 
     function downloadReport() {
-      const barText = document.getElementById('bar').textContent;
-      const report = "AI Content Detection Report\n\nResult: " + barText;
+      const pieValue = document.getElementById('pieValue').textContent;
+      const tfResult = document.getElementById('tfResult').textContent;
+      const aiComment = document.getElementById('aiComment').textContent;
+      const confidenceText = document.getElementById('confidenceText').textContent;
+
+      const report = [
+        'AI Content Detection Report',
+        '',
+        `Classification: ${tfResult}`,
+        `AI Percentage: ${pieValue}`,
+        confidenceText,
+        '',
+        'Comment:',
+        aiComment
+      ].join('\n');
       
       const blob = new Blob([report], { type: "text/plain" });
       const link = document.createElement("a");
