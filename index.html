@@ -37,20 +37,45 @@
   </div>
 
   <!-- Instagram embed script -->
-  <script async src="//www.instagram.com/embed.js"></script>
+  <script async src="https://www.instagram.com/embed.js"></script>
 
   <script>
+    function getEmbedPermalink(rawUrl) {
+      try {
+        const trimmed = rawUrl.trim();
+        if (!trimmed) return null;
+
+        const normalizedInput = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+        const parsed = new URL(normalizedInput);
+        const host = parsed.hostname.toLowerCase();
+        const isInstagramHost = host === "instagram.com" || host === "www.instagram.com" || host === "m.instagram.com";
+        if (!isInstagramHost) return null;
+
+        const path = parsed.pathname;
+        const match = path.match(/^\/(reel|reels|p|tv)\/([^/?#]+)(?:\/.*)?$/i);
+        if (!match) return null;
+
+        const type = match[1].toLowerCase() === "reels" ? "reel" : match[1].toLowerCase();
+        const shortcode = match[2];
+        return `https://www.instagram.com/${type}/${shortcode}/`;
+      } catch {
+        return null;
+      }
+    }
+
     function detectAI() {
       const url = document.getElementById('videoInput').value;
-      if (!url || !url.includes("instagram.com")) {
-        alert("Please paste a valid Instagram Reels URL.");
+      const permalink = getEmbedPermalink(url);
+
+      if (!permalink) {
+        alert("Please paste a valid Instagram post/reel URL (e.g. https://www.instagram.com/reel/.../).");
         return;
       }
 
       // Show Instagram Reel preview using official embed
       document.getElementById('preview').innerHTML =
         `<blockquote class="instagram-media" 
-            data-instgrm-permalink="${url}" 
+            data-instgrm-permalink="${permalink}" 
             data-instgrm-version="14"></blockquote>`;
       // Re-run Instagram embed script to render
       if (window.instgrm) {
