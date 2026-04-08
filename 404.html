@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Redirecting...</title>
+</head>
+<body>
+  <script>
+    (function () {
+      var path = window.location.pathname || "";
+      var segments = path.split('/').filter(Boolean);
+
+      if (segments.length === 0) {
+        window.location.replace('/');
+        return;
+      }
+
+      var project = segments[0];
+      var remainder = segments.slice(1).join('/');
+      var decoded = decodeURIComponent(remainder);
+
+      var igMatch = decoded.match(/https?:\/\/(?:www\.|m\.)?instagram\.com\/[\S]*/i);
+
+      if (igMatch) {
+        var igUrl = igMatch[0];
+        var target = '/' + project + '/?ig=' + encodeURIComponent(igUrl);
+        window.location.replace(target);
+        return;
+      }
+
+      window.location.replace('/' + project + '/');
+    })();
+  </script>
+</body>
+</html>
