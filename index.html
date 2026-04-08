@@ -77,6 +77,32 @@
       }
     }
 
+    function extractInstagramUrlFromCurrentLocation() {
+      const href = window.location.href;
+
+      const queryParams = new URLSearchParams(window.location.search);
+      const queryIg = queryParams.get('ig') || queryParams.get('url') || queryParams.get('reel');
+      if (queryIg) {
+        return queryIg;
+      }
+
+      if (window.location.hash) {
+        const hashText = window.location.hash.slice(1);
+        const hashParams = new URLSearchParams(hashText);
+        const hashIg = hashParams.get('ig') || hashParams.get('url') || hashParams.get('reel');
+        if (hashIg) {
+          return hashIg;
+        }
+      }
+
+      const embeddedIgMatch = href.match(/https?:\/\/(?:www\.|m\.)?instagram\.com\/[\S]+/i);
+      if (embeddedIgMatch) {
+        return embeddedIgMatch[0];
+      }
+
+      return null;
+    }
+
     function detectAI() {
       const url = document.getElementById('videoInput').value;
       const permalink = getEmbedPermalink(url);
@@ -128,6 +154,19 @@
       link.download = "AI_Detection_Report.txt";
       link.click();
     }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const autoUrl = extractInstagramUrlFromCurrentLocation();
+      if (!autoUrl) return;
+
+      const input = document.getElementById('videoInput');
+      input.value = decodeURIComponent(autoUrl);
+
+      const permalink = getEmbedPermalink(input.value);
+      if (permalink) {
+        detectAI();
+      }
+    });
   </script>
 </body>
 </html>
