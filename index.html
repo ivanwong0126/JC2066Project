@@ -88,6 +88,12 @@
 
       if (window.location.hash) {
         const hashText = window.location.hash.slice(1);
+
+        const rawHashMatch = hashText.match(/https?:\/\/(?:www\.|m\.)?instagram\.com\/[\S]+/i);
+        if (rawHashMatch) {
+          return rawHashMatch[0];
+        }
+
         const hashParams = new URLSearchParams(hashText);
         const hashIg = hashParams.get('ig') || hashParams.get('url') || hashParams.get('reel');
         if (hashIg) {
