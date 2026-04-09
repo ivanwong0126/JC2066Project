@@ -140,7 +140,7 @@
         <div id="analysisPanel" class="analysis-panel p-3 mt-4 d-none">
           <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
             <h2 class="h5 mb-0">Detection Progress</h2>
-            <div class="small text-secondary">Processing time: <span id="estimatedTime">0.0</span>s / 5.0s</div>
+            <div class="small text-secondary">Processing time: <span id="estimatedTime">0.0</span>s</div>
           </div>
           <div class="progress mt-3" role="progressbar" aria-label="Analysis progress" aria-valuemin="0" aria-valuemax="100">
             <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated" style="width: 0%">0%</div>
@@ -309,7 +309,7 @@
       return "Moderate";
     }
 
-    function renderResult(aiPercent) {
+    function renderResult(aiPercent, commentOverride = null) {
       const isAI = aiPercent >= 60;
       const tfResult = document.getElementById('tfResult');
       const pieChart = document.getElementById('pieChart');
@@ -326,13 +326,13 @@
       tfResult.textContent = isAI ? 'True (AI Likely)' : 'False (Likely Authentic)';
       tfResult.className = `badge ${isAI ? 'text-bg-danger' : 'text-bg-success'} result-badge`;
 
-      aiComment.textContent = getDetectionComment(aiPercent);
+      aiComment.textContent = commentOverride || getDetectionComment(aiPercent);
       confidenceText.textContent = `Confidence: ${getConfidence(aiPercent)}`;
       output.classList.remove('d-none');
       output.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
-    function runAnalysisAnimation(aiPercent) {
+    function runAnalysisAnimation(aiPercent, commentOverride = null) {
       const durationMs = 5000;
       const tickMs = 100;
       const startedAt = Date.now();
@@ -365,9 +365,30 @@
           estimatedTime.textContent = (durationMs / 1000).toFixed(1);
           detectBtn.disabled = false;
           detectBtn.textContent = 'Detect AI Content';
-          renderResult(aiPercent);
+          renderResult(aiPercent, commentOverride);
         }
       }, tickMs);
+    }
+
+    function getHardcodedDemoResult(permalink) {
+      const aiDemoPermalink = 'https://www.instagram.com/reel/DH4Mk9ORXzA/';
+      const nonAiDemoPermalink = 'https://www.instagram.com/reel/DTICFL0AqxY/';
+
+      if (permalink === aiDemoPermalink) {
+        return {
+          aiPercent: 90,
+          commentOverride: 'This reel appears to follow the Italian Brainrot meme style, with exaggerated surreal visuals, abrupt semantic jumps, and stylized compositing patterns that are commonly associated with AI-generated meme content.'
+        };
+      }
+
+      if (permalink === nonAiDemoPermalink) {
+        return {
+          aiPercent: 0,
+          commentOverride: null
+        };
+      }
+
+      return null;
     }
 
     async function detectAI() {
@@ -421,9 +442,11 @@
         previewLoading.remove();
       }
 
-      // Simulated detector output after timeline animation completes.
-      const aiPercent = Math.floor(Math.random() * 81) + 10;
-      runAnalysisAnimation(aiPercent);
+      // Hardcoded showcase outputs for two demo links; all other links use simulated output.
+      const demoResult = getHardcodedDemoResult(permalink);
+      const aiPercent = demoResult ? demoResult.aiPercent : Math.floor(Math.random() * 81) + 10;
+      const commentOverride = demoResult ? demoResult.commentOverride : null;
+      runAnalysisAnimation(aiPercent, commentOverride);
     }
 
     function downloadReport() {
